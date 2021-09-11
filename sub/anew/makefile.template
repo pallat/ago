@@ -1,0 +1,16 @@
+.PHONY: install run test clean
+
+install:
+    curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin vX.Y.Z
+    go get github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+run:
+    go run .
+linter:
+	golangci-lint run
+security:
+	gosec -quiet ./...
+test:
+    go test ./...
+clean:
+    go clean

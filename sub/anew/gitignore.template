@@ -1,0 +1,10 @@
+# macOS
+**/.DS_Store
+**/.vscode
+
+# Test
+.fake
+.ionide
+
+# Environment variables
+.env

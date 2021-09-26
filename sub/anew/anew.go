@@ -57,6 +57,12 @@ func gomod(modtail, mod string) {
 	defer f.Close()
 
 	ver := strings.TrimPrefix(runtime.Version(), "go")
+	{
+		if strings.Count(ver, ".") > 1 {
+			lastDot := strings.LastIndex(ver, ".")
+			ver = ver[:lastDot]
+		}
+	}
 
 	t := template.Must(template.New("mod").Parse(gomodTemplate))
 	err = t.Execute(f, struct {

@@ -27,11 +27,12 @@ func New(cmd *cobra.Command, args []string) {
 		log.Panic("can not create a directory", err)
 	}
 
-	makefile(modtail)
+	makefile(modtail, mod)
 	gitignore(modtail)
 	license(modtail)
 	maingo(modtail)
 	gomod(modtail, mod)
+	dockerfile(modtail, mod)
 }
 
 //go:embed gomod.template
@@ -48,6 +49,9 @@ var licenseTemplate string
 
 //go:embed main.template
 var mainTemplate string
+
+//go:embed Dockerfile.template
+var dockerFileTemplate string
 
 func gomod(modtail, mod string) {
 	f, err := os.Create(modtail + "/go.mod")
@@ -79,14 +83,19 @@ func gomod(modtail, mod string) {
 	f.Sync()
 }
 
-func makefile(modtail string) {
+func makefile(modtail string, mod string) {
 	f, err := os.Create(modtail + "/Makefile")
 	if err != nil {
 		log.Panic("can not create file", err)
 	}
 	defer f.Close()
 
-	_, err = f.WriteString(makefileTemplate)
+	t := template.Must(template.New("makefile").Parse(makefileTemplate))
+	err = t.Execute(f, struct {
+		Module string
+	}{
+		Module: mod,
+	})
 	if err != nil {
 		log.Panic("can not write file", err)
 	}
@@ -129,6 +138,25 @@ func maingo(modtail string) {
 	defer f.Close()
 
 	_, err = f.WriteString(mainTemplate)
+	if err != nil {
+		log.Panic("can not write file", err)
+	}
+	f.Sync()
+}
+
+func dockerfile(modtail string, mod string) {
+	f, err := os.Create(modtail + "/Dockerfile")
+	if err != nil {
+		log.Panic("can not create file", err)
+	}
+	defer f.Close()
+
+	t := template.Must(template.New("dockerFile").Parse(dockerFileTemplate))
+	err = t.Execute(f, struct {
+		Module string
+	}{
+		Module: mod,
+	})
 	if err != nil {
 		log.Panic("can not write file", err)
 	}

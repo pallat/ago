@@ -14,3 +14,5 @@ test:
 	go test ./...
 clean:
 	go clean
+container:
+	docker build -t {{.Module}} -f ./Dockerfile

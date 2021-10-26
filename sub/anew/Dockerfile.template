@@ -1,0 +1,31 @@
+# Inject custom image based on build environment
+ARG BUILDER_IMAGE=golang:1.17.2-alpine
+ARG BASE_IMAGE=alpine:3.13
+
+FROM $BUILDER_IMAGE as builder
+
+ENV GOOS=linux
+ENV GOARCH=amd64
+
+ARG BUILDER_IMAGE
+RUN apk update && apk add --no-cache gcc libc-dev git ca-certificates tzdata && update-ca-certificates 
+
+WORKDIR /app
+
+COPY . .
+
+RUN git log -n 3 > revision.txt \
+    && git rev-parse --short=8 HEAD > version.txt \
+    && go build \
+        -ldflags="-linkmode=external -w -s" \
+        -o {{.Module}} ./cmd
+
+FROM $BASE_IMAGE
+
+RUN mkdir -p ${APP_HOME} 
+WORKDIR ${APP_HOME}
+COPY --from=builder /app/{{.Module}} .
+COPY --from=builder /app/revision.txt .
+COPY --from=builder /app/version.txt .
+
+ENTRYPOINT ["/app/{{.Module}}"]
